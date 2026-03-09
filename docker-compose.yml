@@ -1,0 +1,52 @@
+# ============================================================
+# Docker Compose – Familie Budget Planner
+# ============================================================
+# Startet die App mit PostgreSQL-Datenbank
+#
+# Verwendung:
+#   docker-compose up -d
+#   docker-compose logs -f
+#   docker-compose down
+# ============================================================
+
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: budget-planner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: budget
+      POSTGRES_PASSWORD: budget_secret
+      POSTGRES_DB: budget_planner
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budget -d budget_planner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: budget-planner-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://budget:budget_secret@db:5432/budget_planner"
+      NEXTAUTH_SECRET: "change-me-use-openssl-rand-base64-32"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NODE_ENV: "production"
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+    driver: local

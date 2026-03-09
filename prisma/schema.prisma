@@ -1,0 +1,237 @@
+// This is the Prisma schema for Family Budget Planner
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  name                String
+  email               String    @unique
+  emailVerified       DateTime?
+  passwordHash        String?
+  image               String?
+  role                String    @default("PARTNER") // ADMIN or PARTNER
+  householdId         String?
+  hidePersonalBudgets Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  household           Household?           @relation(fields: [householdId], references: [id])
+  accounts            Account[]
+  sessions            Session[]
+  incomes             Income[]
+  expenses            Expense[]
+  allocRules          AllocationRule[]
+  savingsGoals        SavingsGoal[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Household {
+  id        String   @id @default(cuid())
+  name      String
+  currency  String   @default("CHF")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users               User[]
+  pots                Pot[]
+  incomes             Income[]
+  expenses            Expense[]
+  allocationRules     AllocationRule[]
+  budgets             Budget[]
+  monthlyPlans        MonthlyPlan[]
+  savingsGoals        SavingsGoal[]
+  transferSuggestions TransferSuggestion[]
+}
+
+model Pot {
+  id             String   @id @default(cuid())
+  householdId    String
+  name           String
+  type           String   @default("GENERAL") // GENERAL, SAVINGS, BUSINESS, PERSONAL, SHARED, AHV
+  color          String   @default("#6366f1")
+  icon           String   @default("wallet")
+  description    String?
+  isShared       Boolean  @default(true)
+  ownerUserId    String?
+  targetAmount   Float?
+  currentBalance Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  household           Household            @relation(fields: [householdId], references: [id])
+  expenses            Expense[]
+  allocationRules     AllocationRule[]
+  budgets             Budget[]
+  transferSuggestions TransferSuggestion[]
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  householdId String
+  userId      String
+  source      String
+  amount      Float
+  date        DateTime
+  month       Int
+  year        Int
+  type        String   @default("SALARY") // SALARY, BUSINESS, SIDE, OTHER
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  householdId String
+  userId      String
+  potId       String?
+  amount      Float
+  date        DateTime
+  category    String
+  description String?
+  note        String?
+  tags        String?
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  pot       Pot?      @relation(fields: [potId], references: [id])
+}
+
+model AllocationRule {
+  id                  String   @id @default(cuid())
+  householdId         String
+  name                String
+  type                String   // PERCENTAGE, FIXED, REMAINDER, THRESHOLD
+  value               Float
+  priority            Int      @default(1)
+  appliesToUserId     String?
+  appliesToIncomeType String?
+  targetPotId         String
+  minAmount           Float?
+  maxAmount           Float?
+  thresholdAmount     Float?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  targetPot Pot       @relation(fields: [targetPotId], references: [id])
+  appliesTo User?     @relation(fields: [appliesToUserId], references: [id])
+}
+
+model Budget {
+  id            String   @id @default(cuid())
+  householdId   String
+  potId         String
+  month         Int
+  year          Int
+  plannedAmount Float
+  actualAmount  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  pot       Pot       @relation(fields: [potId], references: [id])
+
+  @@unique([potId, month, year])
+}
+
+model MonthlyPlan {
+  id              String   @id @default(cuid())
+  householdId     String
+  month           Int
+  year            Int
+  totalIncome     Float    @default(0)
+  allocatedAmount Float    @default(0)
+  remainderAmount Float    @default(0)
+  notes           String?
+  isFinalized     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+
+  @@unique([householdId, month, year])
+}
+
+model SavingsGoal {
+  id            String    @id @default(cuid())
+  householdId   String
+  userId        String?
+  name          String
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  dueDate       DateTime?
+  color         String    @default("#10b981")
+  icon          String    @default("target")
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  user      User?     @relation(fields: [userId], references: [id])
+}
+
+model TransferSuggestion {
+  id                String   @id @default(cuid())
+  householdId       String
+  month             Int
+  year              Int
+  sourceDescription String
+  targetPotId       String?
+  suggestedAmount   Float
+  rationale         String
+  status            String   @default("PENDING") // PENDING, DONE, SKIPPED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id])
+  targetPot Pot?      @relation(fields: [targetPotId], references: [id])
+}
