@@ -45,3 +45,9 @@ prisma/*.db-journal
 
 # env
 .env
+
+# SQLite at project root (also matched)
+dev.db
+dev.db-journal
+*.db
+*.db-journal
