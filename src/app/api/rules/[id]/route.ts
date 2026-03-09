@@ -4,15 +4,16 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const rule = await prisma.allocationRule.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!rule) {
@@ -27,7 +28,7 @@ export async function PUT(
   } = body;
 
   const updated = await prisma.allocationRule.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name,
       type,
@@ -52,21 +53,22 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const rule = await prisma.allocationRule.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!rule) {
     return NextResponse.json({ error: "Regel nicht gefunden" }, { status: 404 });
   }
 
-  await prisma.allocationRule.delete({ where: { id: params.id } });
+  await prisma.allocationRule.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

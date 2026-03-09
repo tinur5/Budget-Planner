@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// PUT /api/pots/[id] - Update a pot
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const pot = await prisma.pot.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!pot) {
@@ -24,7 +24,7 @@ export async function PUT(
   const { name, type, color, icon, description, isShared, ownerUserId, targetAmount, currentBalance } = body;
 
   const updated = await prisma.pot.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name,
       type,
@@ -41,25 +41,24 @@ export async function PUT(
   return NextResponse.json(updated);
 }
 
-// DELETE /api/pots/[id] - Delete a pot
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const pot = await prisma.pot.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!pot) {
     return NextResponse.json({ error: "Topf nicht gefunden" }, { status: 404 });
   }
 
-  await prisma.pot.delete({ where: { id: params.id } });
-
+  await prisma.pot.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

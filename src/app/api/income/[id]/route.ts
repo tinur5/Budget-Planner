@@ -4,15 +4,16 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const income = await prisma.income.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!income) {
@@ -24,7 +25,7 @@ export async function PUT(
 
   const dateObj = date ? new Date(date) : income.date;
   const updated = await prisma.income.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       source,
       amount: amount ? parseFloat(amount) : undefined,
@@ -43,21 +44,22 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.householdId) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
+  const { id } = await params;
   const income = await prisma.income.findFirst({
-    where: { id: params.id, householdId: session.user.householdId },
+    where: { id, householdId: session.user.householdId },
   });
 
   if (!income) {
     return NextResponse.json({ error: "Eintrag nicht gefunden" }, { status: 404 });
   }
 
-  await prisma.income.delete({ where: { id: params.id } });
+  await prisma.income.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
