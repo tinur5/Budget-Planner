@@ -78,7 +78,7 @@ interface DashboardData {
     dueDate?: string | null;
   }>;
   household: { name: string; currency: string } | null;
-  userName: string;
+  userName: string | null | undefined;
 }
 
 export function DashboardClient({ data }: { data: DashboardData }) {
@@ -107,7 +107,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
       {/* Greeting */}
       <div>
         <h2 className="text-2xl font-bold text-slate-900">
-          {greeting}, {userName.split(" ")[0]}! 👋
+          {greeting}{userName ? `, ${userName.split(" ")[0]}` : ""}! 👋
         </h2>
         <p className="text-slate-500 mt-1">
           {getMonthName(month)} {year} · {household?.name || "Familie"}
