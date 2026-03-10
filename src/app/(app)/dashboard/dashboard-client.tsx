@@ -48,7 +48,7 @@ interface DashboardData {
     amount: number;
     date: string;
     type: string;
-    user: { id: string; name: string };
+    user: { id: string; name: string } | null;
   }>;
   expenses: Array<{
     id: string;
@@ -57,7 +57,7 @@ interface DashboardData {
     category: string;
     description?: string;
     pot: { id: string; name: string; color: string } | null;
-    user: { id: string; name: string };
+    user: { id: string; name: string } | null;
   }>;
   pots: Array<{
     id: string;
@@ -272,7 +272,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
                             {expense.description || expense.category}
                           </p>
                           <p className="text-xs text-slate-400">
-                            {formatDate(expense.date)} · {expense.user.name}
+                            {formatDate(expense.date)}{expense.user?.name ? ` · ${expense.user.name}` : ""}
                           </p>
                         </div>
                       </div>

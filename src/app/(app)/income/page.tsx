@@ -39,7 +39,7 @@ interface Income {
   date: string;
   type: string;
   note?: string | null;
-  user: { id: string; name: string };
+  user: { id: string; name: string } | null;
 }
 
 interface User {
@@ -113,7 +113,7 @@ export default function IncomePage() {
       date: income.date.split("T")[0],
       type: income.type,
       note: income.note || "",
-      userId: income.user.id,
+      userId: income.user?.id || "",
     });
     setIsDialogOpen(true);
   }
@@ -286,7 +286,7 @@ export default function IncomePage() {
                         <Badge variant="secondary" className="text-xs py-0">
                           {INCOME_TYPE_LABELS[income.type as keyof typeof INCOME_TYPE_LABELS] || income.type}
                         </Badge>
-                        <span className="text-xs text-slate-500">{income.user.name}</span>
+                        <span className="text-xs text-slate-500">{income.user?.name ?? "Unbekannt"}</span>
                       </div>
                     </div>
                   </div>
