@@ -5,11 +5,23 @@ import { prisma } from "@/lib/prisma";
 // POST /api/demo-data - Load sample data into the current household
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.householdId) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
   }
 
-  const householdId = session.user.householdId;
+  // householdId may be absent from a stale JWT; fall back to a DB lookup
+  let householdId = session.user.householdId;
+  if (!householdId) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { householdId: true },
+    });
+    householdId = dbUser?.householdId;
+  }
+
+  if (!householdId) {
+    return NextResponse.json({ error: "Kein Haushalt gefunden" }, { status: 400 });
+  }
 
   // Get household users
   const users = await prisma.user.findMany({
