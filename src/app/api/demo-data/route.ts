@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       where: { id: session.user.id },
       select: { householdId: true },
     });
-    householdId = dbUser?.householdId;
+    householdId = dbUser?.householdId ?? null;
   }
 
   if (!householdId) {
