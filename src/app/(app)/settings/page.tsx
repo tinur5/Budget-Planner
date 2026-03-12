@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Loader2, Users, Settings } from "lucide-react";
+import { Save, Loader2, Users, Settings, DatabaseZap, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
 interface User {
@@ -29,6 +36,8 @@ export default function SettingsPage() {
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingDemo, setLoadingDemo] = useState(false);
+  const [demoDialogOpen, setDemoDialogOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: "",
     currentPassword: "",
@@ -102,6 +111,26 @@ export default function SettingsPage() {
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleLoadDemoData() {
+    setLoadingDemo(true);
+    setDemoDialogOpen(false);
+    try {
+      const res = await fetch("/api/demo-data", { method: "POST" });
+      if (res.ok) {
+        toast({
+          title: "Beispieldaten geladen",
+          description: "Die Beispieldaten wurden erfolgreich geladen.",
+          variant: "success",
+        });
+      } else {
+        const err = await res.json();
+        toast({ title: "Fehler", description: err.error, variant: "destructive" });
+      }
+    } finally {
+      setLoadingDemo(false);
     }
   }
 
@@ -277,6 +306,66 @@ export default function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Demo Data */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <DatabaseZap className="h-4 w-4 text-slate-500" />
+                <CardTitle>Beispieldaten</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-slate-500">
+                Laden Sie Beispieldaten, um die Applikation mit realistischen Daten zu
+                testen. Bestehende Töpfe, Einnahmen, Ausgaben und Regeln werden dabei
+                überschrieben.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setDemoDialogOpen(true)}
+                disabled={loadingDemo}
+                className="w-full"
+              >
+                {loadingDemo ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Daten werden geladen...
+                  </>
+                ) : (
+                  <>
+                    <DatabaseZap className="mr-2 h-4 w-4" />
+                    Beispieldaten laden
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Confirmation Dialog */}
+          <Dialog open={demoDialogOpen} onOpenChange={setDemoDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  Beispieldaten laden
+                </DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-600">
+                Alle bestehenden Töpfe, Einnahmen, Ausgaben, Regeln, Sparziele und
+                Budgets werden gelöscht und durch Beispieldaten ersetzt. Diese Aktion
+                kann nicht rückgängig gemacht werden.
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDemoDialogOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button onClick={handleLoadDemoData}>
+                  Daten laden
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* App Info */}
           <Card>
