@@ -98,7 +98,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
           variant="ghost"
           size="sm"
           className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ redirectTo: "/login" })}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Abmelden
