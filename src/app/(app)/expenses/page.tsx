@@ -40,7 +40,7 @@ interface Expense {
   description?: string | null;
   note?: string | null;
   pot: { id: string; name: string; color: string } | null;
-  user: { id: string; name: string };
+  user: { id: string; name: string } | null;
 }
 
 interface Pot {
@@ -128,7 +128,7 @@ export default function ExpensesPage() {
       description: expense.description || "",
       note: expense.note || "",
       potId: expense.pot?.id || "",
-      userId: expense.user.id,
+      userId: expense.user?.id || "",
     });
     setIsDialogOpen(true);
   }
