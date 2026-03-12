@@ -11,7 +11,7 @@ export default async function AppLayout({
 }) {
   const session = await auth();
 
-  if (!session) {
+  if (!session?.user) {
     redirect("/login");
   }
 
@@ -20,14 +20,14 @@ export default async function AppLayout({
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <Sidebar
-          userName={session.user.name}
-          userRole={session.user.role}
+          userName={session.user.name ?? undefined}
+          userRole={session.user.role ?? undefined}
         />
       </div>
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header userName={session.user.name} userRole={session.user.role} />
+        <Header userName={session.user.name ?? undefined} userRole={session.user.role ?? undefined} />
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-8 pb-24 lg:pb-8">
             {children}
