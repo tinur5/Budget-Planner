@@ -6,7 +6,8 @@ export default auth((req) => {
   const isLoggedIn = !!session;
   const isLoginPage = nextUrl.pathname === "/login";
   const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
-  const isPublic = isLoginPage || isApiAuth;
+  const isSetupApi = nextUrl.pathname === "/api/setup-users";
+  const isPublic = isLoginPage || isApiAuth || isSetupApi;
 
   if (!isLoggedIn && !isPublic) {
     return NextResponse.redirect(new URL("/login", req.url));

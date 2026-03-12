@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [setupLoading, setSetupLoading] = useState(false);
+  const [setupMessage, setSetupMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +41,26 @@ export default function LoginPage() {
       setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleSetup() {
+    setSetupLoading(true);
+    setSetupMessage("");
+    try {
+      const res = await fetch("/api/setup-users", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSetupMessage("✅ Benutzer erfolgreich erstellt. Sie können sich jetzt anmelden.");
+      } else if (res.status === 409) {
+        setSetupMessage("ℹ️ Benutzer bereits vorhanden. Bitte melden Sie sich an.");
+      } else {
+        setSetupMessage("❌ Fehler: " + (data.error ?? "Unbekannter Fehler"));
+      }
+    } catch {
+      setSetupMessage("❌ Netzwerkfehler. Bitte versuchen Sie es erneut.");
+    } finally {
+      setSetupLoading(false);
     }
   }
 
@@ -139,13 +161,43 @@ export default function LoginPage() {
               <div className="space-y-1 text-xs text-slate-300">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Admin (Martin):</span>
-                  <span>martin@graf.ch / demo1234</span>
+                  <span>tinur5@hotmail.com / welcome</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Partner (Francine):</span>
-                  <span>francine@graf.ch / demo1234</span>
+                  <span>francine.graf@outlook.com / welcome</span>
                 </div>
               </div>
+            </div>
+
+            {/* First-run setup */}
+            <div className="mt-4 rounded-xl bg-slate-700/30 border border-slate-600/50 p-4 space-y-3">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                Ersteinrichtung
+              </p>
+              <p className="text-xs text-slate-400">
+                Beim ersten Start bitte einmalig die Benutzer anlegen:
+              </p>
+              {setupMessage && (
+                <p className="text-xs text-slate-300">{setupMessage}</p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                onClick={handleSetup}
+                disabled={setupLoading}
+              >
+                {setupLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Wird eingerichtet...
+                  </>
+                ) : (
+                  "Benutzer einrichten"
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -157,3 +209,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

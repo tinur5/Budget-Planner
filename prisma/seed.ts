@@ -35,12 +35,12 @@ async function main() {
   console.log("✅ Haushalt erstellt:", household.name);
 
   // Create Users
-  const passwordHash = await bcrypt.hash("demo1234", 12);
+  const passwordHash = await bcrypt.hash("welcome", 12);
 
   const martin = await prisma.user.create({
     data: {
       name: "Martin Graf",
-      email: "martin@graf.ch",
+      email: "tinur5@hotmail.com",
       passwordHash,
       role: "ADMIN",
       householdId: household.id,
@@ -50,7 +50,7 @@ async function main() {
   const francine = await prisma.user.create({
     data: {
       name: "Francine Graf",
-      email: "francine@graf.ch",
+      email: "francine.graf@outlook.com",
       passwordHash,
       role: "PARTNER",
       householdId: household.id,
@@ -421,8 +421,8 @@ async function main() {
 
   console.log("\n🎉 Seed abgeschlossen!");
   console.log("📧 Demo-Zugänge:");
-  console.log("   martin@graf.ch / demo1234 (Admin)");
-  console.log("   francine@graf.ch / demo1234 (Partner)");
+  console.log("   tinur5@hotmail.com / welcome (Admin)");
+  console.log("   francine.graf@outlook.com / welcome (Partner)");
 }
 
 main()
